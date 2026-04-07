@@ -41,7 +41,7 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/student_management';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://StudentDB:<db_password>@ac-3jsvewe-shard-00-00.wdbrqgq.mongodb.net:27017,ac-3jsvewe-shard-00-01.wdbrqgq.mongodb.net:27017,ac-3jsvewe-shard-00-02.wdbrqgq.mongodb.net:27017/?ssl=true&replicaSet=atlas-e4geaq-shard-0&authSource=admin&appName=Cluster0';
 
 mongoose
   .connect(MONGO_URI)
