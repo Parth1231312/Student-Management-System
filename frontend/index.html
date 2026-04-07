@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f4f6fb;--surface:#ffffff;--surface2:#f0f2f8;
+  --border:#e2e6f0;--border2:#d0d6e8;
+  --blue:#4a7de0;--blue-glow:rgba(74,125,224,.18);
+  --text:#1a1f36;--text2:#5a6282;--text3:#9ba4bf;
+  --ff:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--ff);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.bg-dots{position:fixed;inset:0;background-image:radial-gradient(circle, rgba(74,125,224,.08) 1px, transparent 1px);background-size:32px 32px;pointer-events:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 32px;width:100%;max-width:400px;margin:16px;position:relative;z-index:1;box-shadow:0 4px 24px rgba(74,125,224,.08)}
+.logo-row{display:flex;align-items:center;gap:11px;margin-bottom:28px}
+.logo-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:grid;place-items:center;font-size:18px;box-shadow:0 2px 12px var(--blue-glow);flex-shrink:0}
+.logo-text{font-size:20px;font-weight:900;letter-spacing:-.5px}
+.logo-sub{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.card-title{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.card-sub{font-size:12.5px;color:var(--text2);margin-bottom:26px;line-height:1.6}
+.tabs{display:flex;gap:4px;background:var(--surface2);border-radius:9px;padding:4px;margin-bottom:22px;border:1px solid var(--border)}
+.tab{flex:1;padding:7px 0;text-align:center;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--ff)}
+.tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px var(--blue-glow)}
+.form-group{margin-bottom:14px}
+label{display:block;font-size:10.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;font-family:var(--mono);margin-bottom:6px}
+input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;padding:10px 14px;color:var(--text);font-family:var(--ff);font-size:13.5px;outline:none;transition:border-color .15s}
+input:focus{border-color:var(--blue);background:#fff}
+input::placeholder{color:var(--text3)}
+.btn-login{width:100%;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:12px;font-family:var(--ff);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:4px;letter-spacing:-.2px}
+.btn-login:hover{background:#3a6dd0;box-shadow:0 2px 16px var(--blue-glow)}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.hint{font-size:11px;color:var(--text3);font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 13px;margin-top:14px;line-height:1.8}
+.err{background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:10px 14px;font-size:12.5px;color:#dc2626;margin-bottom:12px;display:none}
+</style>
+</head>
+<body>
+<div class="bg-dots"></div>
+<div class="card">
+  <div class="logo-row">
+    <div class="logo-icon">🎓</div>
+    <div>
+      <div class="logo-text">Student Management System</div>
+    </div>
+  </div>
+  <div class="card-title">Welcome</div>
+  <div class="card-sub">Login to your account to continue</div>
+  <div class="tabs">
+    <div class="tab active" onclick="setRole('admin')">Admin</div>
+    <div class="tab" onclick="setRole('student')">Student</div>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="form-group">
+    <label id="u-label">Username</label>
+    <input type="text" id="username" placeholder="Enter username" autocomplete="username"/>
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password" autocomplete="current-password"/>
+  </div>
+  <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In</button>
+</div>
+<script>
+let currentRole = 'admin';
+function setRole(r) {
+  currentRole = r;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&r==='admin')||(i===1&&r==='student')));
+  document.getElementById('u-label').textContent = r === 'admin' ? 'Username' : 'Roll Number';
+  document.getElementById('username').placeholder = r === 'admin' ? 'admin' : 'e.g. ROLL001';
+  document.getElementById('hint').innerHTML = r === 'admin'
+    ? 'Admin: <strong>admin</strong> / <strong>admin123</strong>'
+    : 'Use your Roll Number and password set by admin';
+  document.getElementById('err').style.display='none';
+}
+document.getElementById('password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const err = document.getElementById('err');
+  const btn = document.getElementById('loginBtn');
+  err.style.display='none';
+  if (!username || !password) { err.textContent='Please fill all fields'; err.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Signing in…';
+  try {
+    const res = await fetch('/api/students/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('sms_session', JSON.stringify(data));
+      window.location.href = data.role === 'admin' ? 'pages/dashboard.html' : 'pages/student-portal.html';
+    } else {
+      err.textContent = data.message || 'Invalid credentials';
+      err.style.display='block';
+    }
+  } catch(e) {
+    err.textContent='Server error. Is the backend running?'; err.style.display='block';
+  } finally { btn.disabled=false; btn.textContent='Sign In'; }
+}
+localStorage.removeItem('sms_session');
+</script>
+</body>
+</html>

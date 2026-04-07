@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Marks</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/style.css"/>
+<style>
+.rec-chip{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;}
+.rec-chip-left{display:flex;flex-direction:column;gap:2px;}
+.rec-chip-subj{font-size:12.5px;font-weight:700;color:var(--text);}
+.rec-chip-meta{font-size:10.5px;color:var(--text3);font-family:var(--mono);}
+.rec-chip-score{font-size:15px;font-weight:800;font-family:var(--mono);}
+.rec-chip-score.good{color:var(--green);}
+.rec-chip-score.mid{color:var(--amber);}
+.rec-chip-score.bad{color:var(--red);}
+.score-bar-wrap{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.score-bar{flex:1;height:3px;background:var(--border2);border-radius:99px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:99px;transition:width .4s;}
+.max-info{display:inline-flex;align-items:center;gap:6px;background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,125,224,.2);border-radius:7px;padding:5px 12px;font-size:12px;font-weight:700;font-family:var(--mono);}
+</style>
+</head>
+<body>
+<div class="sidebar" id="sidebar-root"></div>
+<div class="main">
+  <div class="topbar">
+    <div><h1>Marks</h1><div class="tsub">Add &amp; update exam marks per student</div></div>
+  </div>
+  <div class="page-body">
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="si">&#9906;</span>
+        <input type="text" id="search-input" placeholder="Search students&hellip;" oninput="onSearch()"/>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span class="ph-title">Student Marks</span>
+        <span class="ph-count" id="cnt">0 students</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Name</th><th>Roll No.</th><th>Course</th><th>Overall Marks</th><th>Grade</th><th>Action</th></tr>
+          </thead>
+          <tbody id="marks-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MARKS MODAL -->
+<div class="modal-overlay" id="marks-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-close-row">
+      <h2 id="marks-modal-title">Add Marks</h2>
+      <button class="modal-close" onclick="closeModal('marks-modal')">&#10005;</button>
+    </div>
+
+    <!-- Existing records -->
+    <div id="existing-marks" style="margin-bottom:14px;"></div>
+
+    <div class="form-grid">
+      <!-- Subject -->
+      <div class="form-group">
+        <label>Subject *</label>
+        <select id="m-subject">
+          <option value="">-- Select Subject --</option>
+          <option>Mathematics</option>
+          <option>Physics</option>
+          <option>Chemistry</option>
+          <option>Biology</option>
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Computer Science</option>
+          <option>Data Structures</option>
+          <option>Algorithms</option>
+          <option>Database Management</option>
+          <option>Operating Systems</option>
+          <option>Computer Networks</option>
+          <option>Software Engineering</option>
+          <option>Web Development</option>
+          <option>Machine Learning</option>
+          <option>Artificial Intelligence</option>
+          <option>Electronics</option>
+          <option>Mechanics</option>
+          <option>Thermodynamics</option>
+          <option>Economics</option>
+          <option>Business Studies</option>
+          <option>Accountancy</option>
+          <option>Statistics</option>
+          <option>Environmental Science</option>
+        </select>
+      </div>
+
+      <!-- Exam Type -->
+      <div class="form-group">
+        <label>Exam Type *</label>
+        <select id="m-exam" onchange="onExamChange()">
+          <option value="Mid Term">Mid Term</option>
+          <option value="End Term">End Term</option>
+          <option value="Unit Test">Unit Test</option>
+          <option value="Assignment">Assignment</option>
+          <option value="Practical">Practical</option>
+        </select>
+      </div>
+
+      <!-- Max Marks (readonly info) -->
+      <div class="form-group">
+        <label>Max Marks</label>
+        <input id="m-max" type="number" readonly value="20" style="background:var(--surface2);cursor:not-allowed;font-weight:700;color:var(--blue);"/>
+      </div>
+
+      <!-- Score -->
+      <div class="form-group">
+        <label>Score * <span id="score-out-of" style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0;">(out of 20)</span></label>
+        <input id="m-score" type="number" min="0" max="20" placeholder="0" oninput="validateScore()"/>
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label>Date</label>
+        <input id="m-date" type="date"/>
+      </div>
+
+      <!-- Live score bar -->
+      <div class="form-group" id="score-bar-group" style="display:none;">
+        <label>Score Preview</label>
+        <div id="score-preview-wrap" style="padding:6px 0;"></div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text3);margin:10px 0 4px;font-family:var(--mono);">Overall marks = average of all subject scores across all exams.</div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('marks-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMarks()">Save Marks</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/shared.js"></script>
+<script>
+(function(){
+  const session = authGuard('admin');
+  if(!session) return;
+  renderSidebar('marks');
+
+  const EXAM_MAX = {
+    'Mid Term': 20,
+    'End Term': 70,
+    'Unit Test': 30,
+    'Assignment': 10,
+    'Practical': 25
+  };
+
+  let allStudents = [], currentStudentId = null;
+
+  window.onExamChange = function() {
+    const type = document.getElementById('m-exam').value;
+    const max = EXAM_MAX[type] || 100;
+    document.getElementById('m-max').value = max;
+    document.getElementById('score-out-of').textContent = '(out of ' + max + ')';
+    document.getElementById('m-score').max = max;
+    document.getElementById('m-score').value = '';
+    document.getElementById('score-bar-group').style.display = 'none';
+    document.getElementById('score-preview-wrap').innerHTML = '';
+  };
+
+  window.validateScore = function() {
+    const scoreEl = document.getElementById('m-score');
+    const max = Number(document.getElementById('m-max').value);
+    let val = Number(scoreEl.value);
+    if(val > max){ scoreEl.value = max; val = max; }
+    if(val < 0){ scoreEl.value = 0; val = 0; }
+    if(scoreEl.value === ''){ document.getElementById('score-bar-group').style.display='none'; return; }
+    const pct = max > 0 ? Math.round((val/max)*100) : 0;
+    const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('score-bar-group').style.display = 'flex';
+    document.getElementById('score-preview-wrap').innerHTML =
+      '<div class="score-bar-wrap">'
+      +'<div class="score-bar"><div class="score-bar-fill" style="width:'+pct+'%;background:'+color+';"></div></div>'
+      +'<span style="font-size:11px;font-family:var(--mono);color:'+color+';font-weight:700;">'+pct+'%</span>'
+      +'</div>';
+  };
+
+  window.openMarks = function(id) {
+    currentStudentId = id;
+    const s = allStudents.find(function(x){ return x._id === id; });
+    if(!s) return;
+    document.getElementById('marks-modal-title').textContent = 'Marks \u2014 ' + s.name;
+    document.getElementById('m-subject').value = '';
+    document.getElementById('m-exam').value = 'Mid Term';
+    document.getElementById('m-max').value = '20';
+    document.getElementById('m-score').value = '';
+    document.getElementById('m-score').max = 20;
+    document.getElementById('score-out-of').textContent = '(out of 20)';
+    document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('score-bar-group').style.display = 'none';
+    document.getElementById('score-preview-wrap').innerHTML = '';
+
+    const records = s.marksRecords || [];
+    if(records.length) {
+      document.getElementById('existing-marks').innerHTML =
+        '<div style="font-size:10px;font-weight:600;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.9px;margin-bottom:8px;">Previous Records</div>'
+        +'<div style="display:flex;flex-direction:column;gap:5px;">'
+        + records.map(function(r){
+            const pct = r.maxScore > 0 ? Math.round((r.score/r.maxScore)*100) : 0;
+            const cls = pct >= 70 ? 'good' : pct >= 40 ? 'mid' : 'bad';
+            const barColor = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+            return '<div class="rec-chip">'
+              +'<div class="rec-chip-left">'
+              +'<span class="rec-chip-subj">'+r.subject+'</span>'
+              +'<span class="rec-chip-meta">'+r.examType+' &middot; Max: '+r.maxScore+(r.date?' &middot; '+r.date:'')+'</span>'
+              +'<div class="score-bar-wrap" style="max-width:140px;">'
+              +'<div class="score-bar"><div class="score-bar-fill" style="width:'+pct+'%;background:'+barColor+';"></div></div>'
+              +'</div>'
+              +'</div>'
+              +'<span class="rec-chip-score '+cls+'">'+r.score+'/'+r.maxScore+'</span>'
+              +'</div>';
+          }).join('')
+        +'</div>'
+        +'<div style="height:1px;background:var(--border);margin-top:12px;margin-bottom:2px;"></div>';
+    } else {
+      document.getElementById('existing-marks').innerHTML = '';
+    }
+    openModal('marks-modal');
+  };
+
+  window.saveMarks = async function() {
+    const subject = document.getElementById('m-subject').value.trim();
+    const examType = document.getElementById('m-exam').value;
+    const score = Number(document.getElementById('m-score').value);
+    const maxScore = Number(document.getElementById('m-max').value) || 100;
+    const date = document.getElementById('m-date').value;
+    if(!subject){ toast('Please select a subject','error'); return; }
+    if(document.getElementById('m-score').value === ''){ toast('Please enter score','error'); return; }
+    if(isNaN(score) || score < 0){ toast('Invalid score','error'); return; }
+    if(score > maxScore){ toast('Score cannot exceed '+maxScore,'error'); return; }
+    const r = await POST(API.students+'/'+currentStudentId+'/marks', {subject, examType, score, maxScore, date});
+    if(r.success){ toast('Marks saved','success'); closeModal('marks-modal'); loadStudents(); }
+    else toast(r.message||'Error saving marks','error');
+  };
+
+  function render(students) {
+    allStudents = students;
+    document.getElementById('cnt').textContent = students.length + ' students';
+    const tbody = document.getElementById('marks-body');
+    if(!students.length){ tbody.innerHTML = emptyState('No students found'); return; }
+    tbody.innerHTML = students.map(function(s, i){
+      const rc = (s.marksRecords||[]).length;
+      return '<tr>'
+        +'<td class="td-mono">'+(i+1)+'</td>'
+        +'<td class="td-name">'+s.name+'</td>'
+        +'<td class="td-mono">'+s.rollNumber+'</td>'
+        +'<td>'+s.course+'</td>'
+        +'<td><div style="display:flex;align-items:center;gap:8px;">'
+        +'<span style="font-weight:800;font-size:15px;">'+s.marks+'%</span>'
+        +(rc?'<span style="font-size:10px;color:var(--text3);font-family:var(--mono);">'+rc+' record'+(rc!==1?'s':'')+'</span>':'')
+        +'</div></td>'
+        +'<td>'+gradeBadge(s.grade||'C')+'</td>'
+        +'<td><button class="btn btn-primary btn-sm" onclick="openMarks(\''+s._id+'\')">+ Add Marks</button></td>'
+        +'</tr>';
+    }).join('');
+  }
+
+  let timer;
+  window.onSearch = function() {
+    clearTimeout(timer);
+    timer = setTimeout(async function(){
+      const q = document.getElementById('search-input').value.trim();
+      const r = await GET(q ? API.students+'/search?q='+encodeURIComponent(q) : API.students);
+      if(r.success) render(r.data);
+    }, 300);
+  };
+
+  async function loadStudents() {
+    const r = await GET(API.students);
+    if(r.success) render(r.data);
+  }
+  loadStudents();
+})();
+</script>
+</body>
+</html>
